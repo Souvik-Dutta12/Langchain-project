@@ -3,12 +3,13 @@ import React from 'react'
 import { Show, SignInButton, SignUpButton, UserButton, SignIn, SignUp } from '@clerk/react'
 import { ProtectedRoute } from '@/main_components/ProtectedRoute'
 import Navbar from './main_components/Navbar'
+import Landing from './pages/Landing'
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navbar />} />
+        <Route path="/" element={<Landing />} />
 
         {/* <Route path="/dashboard" element={
           <ProtectedRoute><Dashboard /></ProtectedRoute>

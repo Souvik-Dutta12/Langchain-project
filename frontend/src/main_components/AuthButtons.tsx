@@ -1,29 +1,47 @@
-import {
-    SignedIn,
-    SignedOut,
-    SignInButton,
-    SignUpButton,
-    UserButton
-} from '@clerk/clerk-react'
-import {Button} from "@/components/ui/button"
+import { SignInButton, SignOutButton, SignUpButton, UserButton, useUser, useAuth } from '@clerk/clerk-react';
+import { motion } from 'motion/react';
+import { LogIn, UserPlus } from 'lucide-react';
+import {Button} from '@/components/ui/button';
 
 export default function AuthButtons() {
+    const { isSignedIn, isLoaded } = useUser();
+
+    if (!isLoaded) return null;
+
+    if (isSignedIn) {
+        return (
+            <div className="flex items-center gap-4">
+                <UserButton
+                    appearance={{
+                        elements: {
+                            userButtonAvatarBox: "w-9 h-9 border-2 border-indigo-500/30",
+                            userButtonPopoverCard: "bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800",
+                        }
+                    }}
+                />
+            </div>
+        );
+    }
+
     return (
-        <div className='flex gap-3'>
-            <SignedOut>
-                <SignInButton mode="modal">
-                    <Button className="cursor-pointer " variant="secondary">Sign In</Button>
-                </SignInButton>
-
-                <SignUpButton mode="modal">
-                    <Button className="cursor-pointer " variant="secondary">Sign Up</Button>
-                </SignUpButton>
-            </SignedOut>
-
-            <SignedIn>
-                {/* UserButton includes logout option by default */}
-                <UserButton afterSignOutUrl="/" />
-            </SignedIn>
+        <div className="flex items-center gap-3">
+            <SignInButton mode="modal">
+                <Button
+                    variant="outline"
+                    className="flex items-center gap-2 p-4 cursor-pointer text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+                >
+                    <LogIn className="w-4 h-4" />
+                    Sign In
+                </Button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+                <Button
+                    className="flex items-center gap-2 p-4 text-sm font-semibold cursor-pointer bg-linear-to-t from-indigo-500 to-purple-600 text-white rounded-lg shadow-lg shadow-indigo-500/25 transition-all border-none border-b border-neutral-200 hover:shadow-indigo-500/40 hover:from-indigo-600 hover:to-purple-700"
+                >
+                    <UserPlus className="w-4 h-4" />
+                    Get Started
+                </Button>
+            </SignUpButton>
         </div>
-    )
-  }
+    );
+}

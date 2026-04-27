@@ -4,6 +4,15 @@
 @import "@fontsource-variable/geist";
 @import '@clerk/ui/themes/shadcn.css';
 
+
+body {
+  @apply bg-white text-black;
+}
+
+.dark body {
+  @apply bg-black text-white;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
