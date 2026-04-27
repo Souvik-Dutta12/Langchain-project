@@ -11,6 +11,7 @@ export async function clerkAuthMiddleware(c: Context, next: Next) {
 
   const token = authHeader?.replace('Bearer ', '') ?? tokenFromQuery
 
+
   if (!token) {
     return c.json({ error: 'Unauthorized — no token provided' }, 401)
   }

@@ -1,7 +1,7 @@
 interface Window {
     Clerk?: {
       session?: {
-        getToken: (options?: { template?: string }) => Promise<string | null>
+        getToken: (options?: { template?: "Omnis-template" }) => Promise<string | null>
       }
       redirectToSignIn: () => void
     }

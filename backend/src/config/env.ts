@@ -16,7 +16,7 @@ const envSchema = z.object({
   CLERK_PUBLISHABLE_KEY: z.string().min(1),
 
   // Google Gemini
-//   GOOGLE_API_KEY:         z.string().min(1),
+//   GOOGLE_API_KEY: z.string().min(1),
 
 //   // Pinecone
 //   PINECONE_API_KEY:       z.string().min(1),
@@ -24,8 +24,8 @@ const envSchema = z.object({
 //   PINECONE_CLOUD:         z.string().default('aws'),
 //   PINECONE_REGION:        z.string().default('us-east-1'),
 
-//   // MongoDB
-//   MONGODB_URL:            z.string().url(),
+  // MongoDB
+  MONGODB_URL: z.string().url(),
 
 //   // Redis
 //   REDIS_URL:              z.string().url(),
