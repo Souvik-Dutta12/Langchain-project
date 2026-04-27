@@ -1,24 +1,34 @@
 import { SignInButton, SignOutButton, SignUpButton, UserButton, useUser, useAuth } from '@clerk/clerk-react';
-import { motion } from 'motion/react';
+
 import { LogIn, UserPlus } from 'lucide-react';
-import {Button} from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
+
 
 export default function AuthButtons() {
-    const { isSignedIn, isLoaded } = useUser();
+    const { isSignedIn, isLoaded, user } = useUser();
 
     if (!isLoaded) return null;
 
     if (isSignedIn) {
         return (
-            <div className="flex items-center gap-4">
-                <UserButton
-                    appearance={{
-                        elements: {
-                            userButtonAvatarBox: "w-9 h-9 border-2 border-indigo-500/30",
-                            userButtonPopoverCard: "bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800",
-                        }
-                    }}
-                />
+            <div className="flex items-center  ">
+                <div  className="bg-transparent  border-none p-0 flex items-center gap-1">
+
+
+                    <UserButton
+                        appearance={{
+                            elements: {
+                                userButtonAvatarBox: "w-9 h-9 border-2 border-indigo-500/30",
+                                userButtonPopoverCard: "bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800",
+                            }
+
+                        }}
+                    />
+
+                    <span className="text-sm font-medium text-black dark:text-white py-1 px-2 border border-dashed ">
+                        {user?.username || user?.firstName || "User"}
+                    </span >
+                </div>
             </div>
         );
     }
