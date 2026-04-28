@@ -4,7 +4,7 @@ import { cors } from 'hono/cors'
 import { clerkAuthMiddleware } from './middleware/clerkAuth.js';
 import { env } from "./config/env.js";
 import type { AppVariables } from './types/hono.js';
-import { connectToDatabase } from './db/connection.js';
+import { connectToDatabase } from './config/db.js';
 import { syncUserMiddleware } from './middleware/syncUser.js';
 
 const app = new Hono<{ Variables: AppVariables }>();

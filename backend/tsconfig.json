@@ -35,6 +35,7 @@
 
     // Recommended Options
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "strict": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
