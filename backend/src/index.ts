@@ -6,6 +6,7 @@ import { env } from "./config/env.js";
 import type { AppVariables } from './types/hono.js';
 import { connectToDatabase } from './config/db.js';
 import { syncUserMiddleware } from './middleware/syncUser.js';
+import { ensurePineconeIndex } from './config/pineconde.js';
 
 const app = new Hono<{ Variables: AppVariables }>();
 app.use('*', cors({
@@ -29,7 +30,12 @@ app.get('/api/debug-auth', clerkAuthMiddleware,syncUserMiddleware, (c) => {
   });
 });
 
-connectToDatabase().then(() => {
+connectToDatabase()
+.then(()=>{
+  ensurePineconeIndex()
+})
+.then(
+  () => {
   serve({
     fetch: app.fetch,
     port: Number(env.PORT)

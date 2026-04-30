@@ -41,3 +41,11 @@ export interface ChatResponse {
     answer: string
     sources: Source[]
 }
+
+export interface ReportResponse {
+    markdown: string
+    sources: Array<{ 
+        page: number; 
+        chunk: string 
+    }>
+}

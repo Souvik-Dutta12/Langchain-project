@@ -4,8 +4,8 @@ export interface IBook extends Document {
   title: string
   author: string
   ownerClerkId: string        
-  s3Key: string
-  s3Url: string
+  r2Key: string
+  r2Url: string
   fileSize: number
   pageCount: number
   status: 'pending' | 'processing' | 'ready' | 'failed'
@@ -29,11 +29,11 @@ const BookSchema = new Schema<IBook>({
     required: true, 
     index: true 
     },
-  s3Key:{ 
+  r2Key:{ 
     type: String,
      default: '' 
     },
-  s3Url:{ 
+  r2Url:{ 
     type: String, 
     default: '' 
     },

@@ -4,7 +4,11 @@ export interface IMessage extends Document {
     conversationId: string
     role: 'user' | 'assistant'
     content: string
-    sources: Array<{ page: number; chunk: string; bookId: string }>
+    sources: Array<{ 
+        page: number; 
+        chunk: string; 
+        bookId: string 
+    }>
     tokensUsed: number
     createdAt: Date
   }

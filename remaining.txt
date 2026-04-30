@@ -1,0 +1,52 @@
+pdfIngestion.ts
+    - extractImages(Readme.md)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+testing
+--
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+
+async function main() {
+    const pdfPath = path.join(__dirname, 'Soil-Type-Classification.pdf')
+    const outputPath = path.join(__dirname, 'output.txt')
+
+    console.log(`Reading PDF from: ${pdfPath}`)
+    const pdfBuffer = fs.readFileSync(pdfPath)
+
+    console.log('Extracting text...')
+    const pages = await extractTextWithPages(pdfBuffer)
+
+    let output = ''
+    for (const page of pages) {
+        output += `\n${'='.repeat(50)}\n`
+        output += `PAGE ${page.page}\n`
+        output += `${'='.repeat(50)}\n`
+        output += page.text + '\n'
+    }
+
+    output += `\n${'='.repeat(50)}\n`
+    output += `TOTAL PAGES EXTRACTED: ${pages.length}\n`
+
+    fs.writeFileSync(outputPath, output, 'utf-8')
+    console.log(`✅ Done! Output written to: ${outputPath}`)
+}
+
+main().catch(console.error)

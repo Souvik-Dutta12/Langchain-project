@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import type { AppVariables } from '../types/hono.js' 
-import { BookModel } from '../models/book'
+import { BookModel } from '../models/book.js'
 
 const router = new Hono<{ Variables: AppVariables }>()
 
