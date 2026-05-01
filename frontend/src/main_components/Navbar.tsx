@@ -37,7 +37,7 @@ const Navbar = () => {
   return (
     <motion.nav
       
-      className="fixed top-10 left-[15%] z-50 h-[8vh] w-[70%] flex  items-center justify-between px-6 md:px-12 backdrop-blur-md border border-white/30 dark:border-white/5 transition-all duration-300 rounded-lg shadow-xl shadow-black/5" 
+      className="fixed top-8 left-[15%] z-50 h-[8vh] w-[70%] flex  items-center justify-between px-6 md:px-12 backdrop-blur-md border border-white/30 dark:border-white/5 transition-all duration-300 rounded-lg shadow-xl shadow-black/5" 
     >
       <div className="flex items-center gap-12 ">
         {/* Logo Section */}

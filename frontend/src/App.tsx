@@ -4,6 +4,7 @@ import { Show, SignInButton, SignUpButton, UserButton, SignIn, SignUp } from '@c
 import { ProtectedRoute } from '@/main_components/ProtectedRoute'
 import Navbar from './main_components/Navbar'
 import Landing from './pages/Landing'
+import Dashboard from './pages/Dashboard.tsx'
 
 const App = () => {
   return (
@@ -11,10 +12,10 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Landing />} />
 
-        {/* <Route path="/dashboard" element={
+         <Route path="/dashboard" element={
           <ProtectedRoute><Dashboard /></ProtectedRoute>
         } />
-        <Route path="/books/:id" element={
+        {/*<Route path="/books/:id" element={
           <ProtectedRoute><BookChat /></ProtectedRoute>
         } />
         <Route path="/books/:id/report" element={

@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 
 const Landing = () => {
     return (
-        <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50 selection:bg-indigo-500/30">
+        <div className="min-h-screen my-auto border-red-500 bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50 selection:bg-indigo-500/30">
             <Navbar />
 
             <main className="pt-[8vh]">
