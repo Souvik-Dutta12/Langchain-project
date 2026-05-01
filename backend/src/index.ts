@@ -6,7 +6,8 @@ import { env } from "./config/env.js";
 import type { AppVariables } from './types/hono.js';
 import { connectToDatabase } from './config/db.js';
 import { syncUserMiddleware } from './middleware/syncUser.js';
-import { ensurePineconeIndex } from './config/pineconde.js';
+import { ensurePineconeIndex } from './config/pinecone.js';
+import booksRouter from './routers/books.js'
 
 const app = new Hono<{ Variables: AppVariables }>();
 app.use('*', cors({
@@ -16,31 +17,44 @@ app.use('*', cors({
 }))
 
 //routes
-app.get('/api/health', (c) => c.json({ status: 'ok' }))
+app.get('/api/v1/health', (c) => c.json({ status: 'ok' }))
+
+//auth middleware
+app.use('/api/v1/*', clerkAuthMiddleware)
+app.use('/api/v1/*', syncUserMiddleware)
+
 
 // protected routes
-app.get('/api/debug-auth', clerkAuthMiddleware,syncUserMiddleware, (c) => {
-  const userId = c.get('userId');
+app.route('/api/v1/books', booksRouter)
 
-  console.log("DEBUG ROUTE HIT:", userId);
 
+
+// 404 handler
+app.notFound((c) => c.json({
+  error: 'Route not found'
+}, 404))
+
+// Error handler
+app.onError((err, c) => {
+  console.error('Unhandled error:', err)
   return c.json({
-    message: "Auth working",
-    userId,
-  });
-});
+    error: 'Internal server error'
+  }, 500)
+})
+
+
 
 connectToDatabase()
-.then(()=>{
-  ensurePineconeIndex()
-})
-.then(
-  () => {
-  serve({
-    fetch: app.fetch,
-    port: Number(env.PORT)
-  },
-    () => { console.log(`Server running on http://localhost:${env.PORT}`) })
-}).catch((error) => {
-  console.error('Failed to connect to database. Server not started.', error);
-})
+  .then(() => {
+    ensurePineconeIndex()
+  })
+  .then(
+    () => {
+      serve({
+        fetch: app.fetch,
+        port: Number(env.PORT)
+      },
+        () => { console.log(`Server running on http://localhost:${env.PORT}`) })
+    }).catch((error) => {
+      console.error('Failed to connect to database. Server not started.', error);
+    })
