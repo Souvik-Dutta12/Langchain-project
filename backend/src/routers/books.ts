@@ -12,7 +12,7 @@ const router = new Hono<{ Variables: AppVariables }>()
 // Cloudflare R2 client — S3-compatible
 const r2 = new S3Client({
   region: 'auto',
-  endpoint: `https://${env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudfarestorage.com`,
+  endpoint: `https://${env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
     accessKeyId: env.R2_ACCESS_KEY_ID,
     secretAccessKey: env.R2_SECRET_ACCESS_KEY
@@ -37,7 +37,7 @@ router.get('/', async (c) => {
   return c.json({ books })
 })
 
-// POST /api/books/upload — upload PDF → R2 → enqueue ingestion job
+//POST /api/books/upload — upload PDF → R2 → enqueue ingestion job
 router.post('/upload', async (c) => {
   const userId = c.get('userId')
   const formData = await c.req.formData()
@@ -108,7 +108,7 @@ router.post('/upload', async (c) => {
 
 })
 
-// GET /api/books/:id/status — poll processing status
+//GET /api/books/:id/status — poll processing status
 router.get('/:id/status', async (c) => {
   const userId = c.get('userId')
   const { id } = c.req.param()

@@ -16,7 +16,9 @@ export function useBooks() {
  * Poll a book's processing status until it's ready or failed.
  * Call this after upload, pass in the bookId.
  */
-export function pollBookStatus(bookId: string, onUpdate: (progress: number, status: string) => void) {
+export function pollBookStatus(
+  bookId: string, 
+  onUpdate: (progress: number, status: string) => void) {
   const interval = setInterval(async () => {
     try {
       const { data } = await apiClient.get<{
@@ -24,6 +26,7 @@ export function pollBookStatus(bookId: string, onUpdate: (progress: number, stat
         processingProgress: number
       }>(`/books/${bookId}/status`)
 
+      console.log(data)
       onUpdate(data.processingProgress, data.status)
       useBooksStore.getState().updateBook(bookId, {
         status: data.status as any,
