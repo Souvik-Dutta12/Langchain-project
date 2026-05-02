@@ -1,12 +1,7 @@
 // src/config/env.ts
 import { z } from 'zod'
-import dotenv from 'dotenv'
+import 'dotenv/config'
 
-dotenv.config(
-    {
-        path: './.env'
-    }
-)
 const envSchema = z.object({
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     PORT: z.string().default('3001'),
@@ -17,6 +12,9 @@ const envSchema = z.object({
 
     // Google Gemini
     GOOGLE_API_KEY: z.string().min(1),
+
+    // Hugging face
+    HUGGINGFACE_API_KEY: z.string().min(1),
 
     // Pinecone
     PINECONE_API_KEY: z.string().min(1),

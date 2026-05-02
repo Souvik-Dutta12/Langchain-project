@@ -13,7 +13,7 @@ export async function ensurePineconeIndex(): Promise<void>{
     if(!exists) {
         await pinecone.createIndex({
             name: env.PINECONE_INDEX_NAME,
-            dimension: 768,
+            dimension: 384, // 768
             metric: 'cosine',
             spec:{
                 serverless: {

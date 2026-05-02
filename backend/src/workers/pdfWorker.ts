@@ -1,7 +1,7 @@
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { env } from "../config/env.js";
 import { connectToDatabase } from "../config/db.js";
-import { ensurePineconeIndex } from "../config/pinecone.js";
+import { ensurePineconeIndex, pinecone } from "../config/pinecone.js";
 import { Job, Worker } from "bullmq";
 import { BookModel } from "../models/book.js";
 import { extractTextWithPages } from "../services/pdfIngestion.js";
@@ -80,6 +80,7 @@ async function startWorker() {
                 { _id: bookId },
                 { processingProgress: 60 }
             )
+
 
             //embed + upsert into pinecone
             await embedAndUpsert(chunks, namespace)
