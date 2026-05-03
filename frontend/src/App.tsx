@@ -5,6 +5,10 @@ import { ProtectedRoute } from '@/main_components/ProtectedRoute'
 import Navbar from './main_components/Navbar'
 import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard.tsx'
+import BookChat from './pages/books/BookChat.tsx'
+import ReportBuilder from './pages/books/ReportBuilder.tsx'
+import QuizView from './pages/books/QuizView.tsx'
+import Summary from './pages/books/Summary.tsx'
 
 const App = () => {
   return (
@@ -15,7 +19,7 @@ const App = () => {
          <Route path="/dashboard" element={
           <ProtectedRoute><Dashboard /></ProtectedRoute>
         } />
-        {/*<Route path="/books/:id" element={
+        <Route path="/books/:id" element={
           <ProtectedRoute><BookChat /></ProtectedRoute>
         } />
         <Route path="/books/:id/report" element={
@@ -26,7 +30,7 @@ const App = () => {
         } />
         <Route path="/books/:id/summary" element={
           <ProtectedRoute><Summary /></ProtectedRoute>
-        } /> */}
+        } /> 
       </Routes>
     </BrowserRouter>
   )

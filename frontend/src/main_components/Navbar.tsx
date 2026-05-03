@@ -4,6 +4,7 @@ import { useAuth } from '@clerk/clerk-react';
 import ThemeToggle from './ThemeToggle';
 import { motion, useScroll, useTransform } from 'motion/react';
 import Logo from './Logo';
+import { cn } from '@/lib/utils';
 
 const Navbar = () => {
   const { isSignedIn, sessionId, getToken, isLoaded } = useAuth();
@@ -37,7 +38,10 @@ const Navbar = () => {
   return (
     <motion.nav
       
-      className="fixed top-8 left-[15%] z-50 h-[8vh] w-[70%] flex  items-center justify-between px-6 md:px-12 backdrop-blur-md border border-white/30 dark:border-white/5 transition-all duration-300 rounded-lg shadow-xl shadow-black/5" 
+      className={cn(
+        "fixed top-5 left-[15%] z-50 h-[8vh] w-[70%] flex  items-center justify-between px-6 md:px-12 backdrop-blur-md border border-white/30 dark:border-white/5 transition-all duration-300 rounded-lg ",
+        "shadow-[0px_10px_50px_rgba(0,0,0,0.1)]"
+      )} 
     >
       <div className="flex items-center gap-12 ">
         {/* Logo Section */}

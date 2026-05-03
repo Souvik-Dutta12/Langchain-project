@@ -1,17 +1,15 @@
 import { useCallback, useState } from 'react'
-import { useDropzone } from 'react-dropzone'
-import { UploadCloud, Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle } from 'lucide-react'
 import apiClient from '@/api/client'
 import { useBooksStore } from '@/store/useBooksStore'
 import { pollBookStatus } from '@/hooks/useBooks'
 import type { Book } from '../../../packages/types/src'
+import { FileUpload } from "@/components/ui/file-upload"
 
 export function FileUploader() {
-    const [uploading, setUploading] = useState(false)
     const [uploadProgress, setUploadProgress] = useState(0)
     const [processingProgress, setProcessingProgress] = useState(0)
     const [stage, setStage] = useState<'idle' | 'uploading' | 'processing' | 'done' | 'error'>('idle')
-
     const addBook = useBooksStore((s) => s.addBook)
 
     const onDrop = useCallback(async (accepted: File[]) => {
@@ -38,7 +36,6 @@ export function FileUploader() {
 
             setStage('processing')
 
-            // Add placeholder book to store
             addBook({
                 id: data.bookId,
                 title: file.name.replace(/\.pdf$/i, ''),
@@ -50,7 +47,6 @@ export function FileUploader() {
                 createdAt: new Date().toISOString(),
             } as Book)
 
-            // Poll until done
             const stop = pollBookStatus(data.bookId, (progress, status) => {
                 setProcessingProgress(progress)
                 if (status === 'ready') {
@@ -61,7 +57,6 @@ export function FileUploader() {
                 }
             })
 
-            // Clean up if component unmounts
             return stop
         } catch (err) {
             console.error('Upload failed:', err)
@@ -69,39 +64,22 @@ export function FileUploader() {
         }
     }, [addBook])
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: { 'application/pdf': ['.pdf'] },
-        maxFiles: 1,
-        maxSize: 100 * 1024 * 1024,
-        disabled: stage !== 'idle',
-    })
-
     return (
         <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-200 select-none ${isDragActive ? 'border-blue-500 bg-blue-50 scale-[1.02]' : 'border-gray-200 hover:border-gray-400'} ${stage !== 'idle' ? 'cursor-default' : ''}
-            `}
+            className={`border border-neutral-300 bg-neutral-50 dark:bg-neutral-900/20 dark:border-neutral-700 border-dashed h-full rounded-md p-12 text-center transition-all duration-200 select-none ${stage !== 'idle' ? 'cursor-default' : 'cursor-pointer'}`}
         >
-            <input {...getInputProps()} />
-
-            {stage === 'idle' && (
-                <div className="flex flex-col items-center gap-3 text-gray-500">
-                    <UploadCloud className="h-12 w-12 text-gray-300" />
-                    <p className="font-medium text-gray-700">
-                        {isDragActive ? 'Drop it!' : 'Drop your PDF here'}
-                    </p>
-                    <p className="text-sm">or <span className="text-blue-500 underline">browse</span> · Max 100MB</p>
-                </div>
-            )}
+            {/* Always mounted so FileUpload doesn't lose its state; hidden via CSS when not idle */}
+            <div className={`w-full max-w-4xl mx-auto h-full border border-dashed bg-neutral-50 dark:bg-black border-neutral-200 dark:border-neutral-800 rounded-lg ${stage !== 'idle' ? 'hidden' : ''}`}>
+                <FileUpload onChange={onDrop} disabled={stage !== 'idle'} />
+            </div>
 
             {stage === 'uploading' && (
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="h-10 w-10 text-blue-500 animate-spin" />
+                <div className="flex flex-col mt-7 items-center justify-center gap-4">
+                    <Loader2 className="h-10 w-10 text-indigo-500 animate-spin" />
                     <p className="font-medium">Uploading... {uploadProgress}%</p>
-                    <div className="w-64 bg-gray-100 rounded-full h-2">
+                    <div className="w-64 bg-transparent border rounded-full h-2">
                         <div
-                            className="bg-blue-500 h-2 rounded-full transition-all"
+                            className="bg-linear-to-t from-indigo-500 to-purple-600 h-2 rounded-full transition-all"
                             style={{ width: `${uploadProgress}%` }}
                         />
                     </div>
@@ -109,13 +87,13 @@ export function FileUploader() {
             )}
 
             {stage === 'processing' && (
-                <div className="flex flex-col items-center gap-4">
+                <div className="flex flex-col mt-5 items-center justify-center gap-4">
                     <Loader2 className="h-10 w-10 text-purple-500 animate-spin" />
                     <p className="font-medium">Processing PDF... {processingProgress}%</p>
                     <p className="text-sm text-gray-400">Extracting text · Embedding · Indexing</p>
-                    <div className="w-64 bg-gray-100 rounded-full h-2">
+                    <div className="w-64 bg-transparent border rounded-full h-2">
                         <div
-                            className="bg-purple-500 h-2 rounded-full transition-all duration-500"
+                            className="bg-linear-to-t from-purple-500 to-indigo-600 h-2 rounded-full transition-all duration-500"
                             style={{ width: `${processingProgress}%` }}
                         />
                     </div>
@@ -123,9 +101,9 @@ export function FileUploader() {
             )}
 
             {stage === 'done' && (
-                <div className="flex flex-col items-center gap-3 text-green-600">
-                    <CheckCircle className="h-12 w-12" />
-                    <p className="font-medium">Book ready!</p>
+                <div className="flex flex-col items-center gap-3 mt-6 text-green-600">
+                    <CheckCircle className="h-10 w-10" />
+                    <p className="font-medium">PDF ready!</p>
                 </div>
             )}
 

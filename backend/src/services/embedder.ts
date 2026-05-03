@@ -37,6 +37,7 @@ async function getEmbedding(text: string): Promise<number[]> {
         return pooled.map(v => v / matrix.length)
     }
 }
+
 export async function embedAndUpsert(
     chunks: Document[],
     namespace: string
@@ -75,7 +76,6 @@ export async function embedAndUpsert(
 
     }
 }
-
 
 export async function similaritySearch(
     query: string,

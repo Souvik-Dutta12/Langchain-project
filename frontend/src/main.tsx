@@ -5,6 +5,7 @@ import App from './App.tsx'
 import {ClerkProvider} from "@clerk/clerk-react";
 import { shadcn } from '@clerk/ui/themes'
 import { ThemeProvider } from "next-themes";
+import 'remixicon/fonts/remixicon.css'
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 if(!PUBLISHABLE_KEY) throw new Error("Missing Clerk publishable key.")
