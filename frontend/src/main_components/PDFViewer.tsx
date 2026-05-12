@@ -12,6 +12,8 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination"
+import { ChevronLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 // Required for react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
@@ -20,10 +22,11 @@ interface Props {
     pdfUrl: string
     currentPage?: number
     onPageChange?: (page: number) => void
+    onClose?: () => void
 }
 
 
-export function PDFViewer({ pdfUrl, currentPage = 1, onPageChange }: Props) {
+export function PDFViewer({ pdfUrl, currentPage = 1, onPageChange, onClose }: Props) {
     const [numPages, setNumPages] = useState(0)
     const [page, setPage] = useState(currentPage)
 
@@ -53,7 +56,17 @@ export function PDFViewer({ pdfUrl, currentPage = 1, onPageChange }: Props) {
                 "flex flex-col h-full w-4/5 rounded-md border-indigo-500", "fog-shadow"
                 
             )}>
-                <div className="flex-1 overflow-auto flex justify-center p-6">
+                <div className="flex items-center gap-3 px-4 py-2 border-b">
+                    <Button
+                        variant={"outline"}
+                        onClick={onClose}
+                        className="flex items-center bg-neutral-200/10 hover:bg-neutral-200/30  gap-1.5 text-sm  transition-colors cursor-pointer"
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                        Back
+                    </Button>
+                </div>
+                <div className="flex-1 overflow-auto flex justify-center ">
                     <Document
                         file={pdfUrl}
                         onLoadSuccess={({ numPages }) => setNumPages(numPages)}

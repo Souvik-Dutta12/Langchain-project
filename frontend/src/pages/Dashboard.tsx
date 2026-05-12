@@ -117,7 +117,10 @@ export default function Dashboard() {
 
                 {selectedBook ?
                     
-                        <PDFViewer pdfUrl={selectedBook.r2Url} />
+                        <PDFViewer 
+                        pdfUrl={selectedBook.r2Url}
+                        onClose={() => setSelectedBook(null)}
+                        />
                     : 
                     <div className={cn(
                         "right h-full w-4/5 rounded-md border  flex ",
