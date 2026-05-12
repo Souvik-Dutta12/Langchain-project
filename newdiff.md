@@ -1,4 +1,4 @@
-# Ebook Mafia — Complete File Tree + All Code
+==================# Ebook Mafia — Complete File Tree + All Code
 > npm · Cloudflare R2 (free 10GB) · BullMQ · LangChain.js · Gemini · Clerk · Hono · Pinecone
 
 ---

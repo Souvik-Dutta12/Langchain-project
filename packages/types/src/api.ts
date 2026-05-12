@@ -2,6 +2,7 @@ export interface Book {
     id: string
     title: string
     author: string
+    r2Url: string
     status: 'pending' | 'processing' | 'ready' | 'failed'
     processingProgress: number   
     pageCount: number

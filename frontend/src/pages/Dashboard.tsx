@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FileUploader } from '@/main_components/FileUploader'
 import { useBooksStore } from '@/store/useBooksStore'
@@ -7,9 +7,14 @@ import type { Book } from '../../../packages/types/src'
 import Navbar from '@/main_components/Navbar'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { PDFViewer } from '@/main_components/PDFViewer'
+import { useAuth } from "@clerk/clerk-react";
 
-function BookCard({ book }: { book: Book }) {
-    const statusColors = {
+function BookCard({ book,onPreview }: { 
+    book: Book;
+    onPreview: (book: Book) => void;
+ }) {
+        const statusColors = {
         pending: 'text-neutral-400',
         processing: 'text-yellow-500',
         ready: 'text-green-500',
@@ -17,12 +22,10 @@ function BookCard({ book }: { book: Book }) {
     }
 
     return (
-        <Link
-            to={book.status === 'ready' ? `/books/${book.id}` : '#'}
+        <div
+           
             className={cn(
-                `block p-4 border rounded-md hover:shadow-md transition-shadow bg-white dark:bg-neutral-950
-        ${book.status !== 'ready' ? 'opacity-70 cursor-default' : ''}`,
-
+                `block p-4 border rounded-md hover:shadow-md transition-shadow bg-white dark:bg-neutral-950 ${book.status !== 'ready' ? 'opacity-70 cursor-default' : ''}`,
             )}
         >
             <div className="flex items-center gap-3">
@@ -40,23 +43,35 @@ function BookCard({ book }: { book: Book }) {
                         </span>
 
                         <Button
-                            className="flex items-center duration-300 gap-2 p-3 text-sm font-semibold cursor-pointer bg-linear-to-t from-indigo-500 to-purple-600 text-white rounded-md shadow-lg shadow-indigo-500/25 transition-all border-none border-b border-neutral-200 hover:shadow-indigo-500/40 hover:from-indigo-600 hover:to-purple-700"
-                        >
 
+                            onClick={() => {
+                                if (book.status === "ready") {
+                                    onPreview(book);
+                                }
+                            }}
+                            className="flex items-center active:scale-90 active:shadow-none duration-300 gap-2 p-3 text-sm font-semibold cursor-pointer bg-linear-to-t from-indigo-500 to-purple-600 text-white rounded-md shadow-lg shadow-indigo-500/25 transition-all border-none border-b border-neutral-200 hover:shadow-indigo-500/40 hover:from-indigo-600 hover:to-purple-700"
+                        >
                             Preview
                         </Button>
                     </div>
                 </div>
             </div>
-        </Link>
+        </div>
     )
 }
 
 export default function Dashboard() {
     const { books, loading, fetchBooks } = useBooksStore()
+    const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 
-    useEffect(() => { fetchBooks() }, [])
+    const { isLoaded, isSignedIn } = useAuth();
+    useEffect(() => {
+        if (isLoaded && isSignedIn) {
+            fetchBooks();
+        }
+    }, [isLoaded, isSignedIn]);
 
+    console.log(selectedBook)
     return (
         <div className="h-screen  bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50 selection:bg-indigo-500/30">
             <div className='h-[13%] '>
@@ -88,20 +103,35 @@ export default function Dashboard() {
                             ) : (
                                 <div className="flex flex-col gap-1">
                                     {books.map((book) => (
-                                        <BookCard key={book.id} book={book} />
+                                        <BookCard 
+                                        key={book.id} 
+                                        book={book} 
+                                        onPreview = {setSelectedBook}
+                                        />
                                     ))}
                                 </div>
                             )}
                         </section>
                     </div>
                 </div>
-                <div className={cn(
-                    "right h-full w-4/5 rounded-md border  flex ",
-                    "shadow-[0px_0px_1px_3px_rgba(255,255,255,1)_inset] dark:shadow-[0px_0px_1px_3px_rgba(0,0,0,1)_inset]"
-                )}>
-                    <div className="left h-full w-1/4 rounded-l-md border-r "></div>
-                    <div className="right h-full w-3/4 rounded-r-md"></div>
-                </div>
+
+                {selectedBook ?
+                    
+                        <PDFViewer pdfUrl={selectedBook.r2Url} />
+                    : 
+                    <div className={cn(
+                        "right h-full w-4/5 rounded-md border  flex ",
+                        "shadow-[0px_0px_1px_3px_rgba(255,255,255,1)_inset] dark:shadow-[0px_0px_1px_3px_rgba(0,0,0,1)_inset]"
+                    )}>
+
+                        <div className="left h-full w-1/4 rounded-l-md border-r "></div>
+                        <div className="right h-full w-3/4 rounded-r-md"></div>
+                    </div>
+
+             
+                    }
+
+                
 
 
             </main>

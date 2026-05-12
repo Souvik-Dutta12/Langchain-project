@@ -138,3 +138,40 @@ body {
     @apply font-sans;
     }
 }
+
+/* ===== Scrollbar (Chrome, Edge, Safari) ===== */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  /* optional dark track (indigo-950 vibe) */
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg,
+      #9333ea,
+      /* purple-600 */
+      #6366f1
+      /* indigo-500 */
+    );
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg,
+      #7e22ce,
+      /* darker purple */
+      #4f46e5
+      /* darker indigo */
+    );
+}
+
+
+/* ===== Scrollbar (Firefox) ===== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #9333ea transparent;
+  /* thumb | track */
+}

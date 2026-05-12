@@ -22,7 +22,8 @@ export const useBooksStore = create<BooksState>((set) => ({
     try {
       const { data } = await apiClient.get<{ books: Book[] }>('/books')
       set({ books: data.books })
-    } catch {
+    } catch (err: any) {
+      console.error('fetchBooks error:', err.response?.data || err.message)
       set({ error: 'Failed to load books' })
     } finally {
       set({ loading: false })

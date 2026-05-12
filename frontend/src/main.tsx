@@ -14,7 +14,12 @@ createRoot(document.getElementById('root')!).render(
     <ClerkProvider 
     publishableKey={PUBLISHABLE_KEY}
     appearance={{
-      theme: shadcn
+      theme: shadcn,
+      elements:{
+        
+        formButtonPrimary:
+          "bg-linear-to-t from-indigo-500 to-purple-600 text-white rounded-lg shadow-lg shadow-indigo-500/25 transition-all border-none border-b border-neutral-200 hover:shadow-indigo-500/40 hover:from-indigo-600 hover:to-purple-700"
+      }
     }}
     >
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>

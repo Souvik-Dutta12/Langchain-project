@@ -7,9 +7,16 @@ const apiClient = axios.create({
 // Intercept every outgoing request — attach Clerk JWT
 apiClient.interceptors.request.use(async (config) => {
   // window.Clerk is globally available after ClerkProvider mounts
-  const token = await window.Clerk?.session?.getToken()
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+  try {
+    const token = await window.Clerk?.session?.getToken()
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+      // console.log('Token attached to request:', token.substring(0, 20) + '...')
+    } else {
+      console.warn('No token available from Clerk')
+    }
+  } catch (err) {
+    console.error('Error getting token:', err)
   }
   return config
 })
@@ -17,9 +24,10 @@ apiClient.interceptors.request.use(async (config) => {
 // Handle 401 globally — redirect to sign-in
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      window.Clerk?.redirectToSignIn()
+      console.error("Unauthorized");
+      
     }
     return Promise.reject(error)
   }

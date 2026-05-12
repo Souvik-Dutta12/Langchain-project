@@ -1,20 +1,27 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination"
 
 // Required for react-pdf
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.mjs',
-    import.meta.url
-).toString()
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 interface Props {
     pdfUrl: string
     currentPage?: number
     onPageChange?: (page: number) => void
 }
+
 
 export function PDFViewer({ pdfUrl, currentPage = 1, onPageChange }: Props) {
     const [numPages, setNumPages] = useState(0)
@@ -26,51 +33,86 @@ export function PDFViewer({ pdfUrl, currentPage = 1, onPageChange }: Props) {
         onPageChange?.(clamped)
     }
 
+
     return (
-        <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-auto flex justify-center bg-gray-100 p-4">
-                <Document
-                    file={pdfUrl}
-                    onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-                    loading={<p className="text-gray-400 mt-20">Loading PDF…</p>}
-                >
-                    <Page
-                        pageNumber={page}
-                        width={600}
-                        renderTextLayer
-                        renderAnnotationLayer
-                    />
-                </Document>
+        <>
+            <style>{`
+                @keyframes fogDrift {
+                    0%   { box-shadow: inset 0 0 80px 20px rgba(99,102,241,0.5), inset 0 0 140px 40px rgba(147,51,234,0.2); }
+                    25%  { box-shadow: inset 0 0 120px 40px rgba(99,102,241,0.35), inset 0 0 80px 10px rgba(147,51,234,0.35); }
+                    50%  { box-shadow: inset 0 0 60px 10px rgba(99,102,241,0.6), inset 0 0 160px 60px rgba(147,51,234,0.15); }
+                    75%  { box-shadow: inset 0 0 100px 30px rgba(99,102,241,0.4), inset 0 0 60px 5px rgba(147,51,234,0.4); }
+                    100% { box-shadow: inset 0 0 80px 20px rgba(99,102,241,0.5), inset 0 0 140px 40px rgba(147,51,234,0.2); }
+                }
+                .fog-shadow {
+                    animation: fogDrift 6s ease-in-out infinite;
+                }
+            `}</style>
+
+            <div className={cn(
+                "flex flex-col h-full w-4/5 rounded-md border-indigo-500", "fog-shadow"
+                
+            )}>
+                <div className="flex-1 overflow-auto flex justify-center p-6">
+                    <Document
+                        file={pdfUrl}
+                        onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                        loading={<p className=" mt-50 text-xl">Loading PDF…</p>}
+                    >
+                        <Page
+                            pageNumber={page}
+                            width={1000}
+                            renderTextLayer
+                            renderAnnotationLayer
+                        />
+                    </Document>
+                </div>
+
+                <div className="border-t py-3">
+                    <Pagination>
+                        <PaginationContent>
+                            <PaginationItem>
+                                <PaginationPrevious
+                                    onClick={() => goTo(page - 1)}
+                                    className={page <= 1 ? 'pointer-events-none opacity-30 ' : 'cursor-pointer'}
+                                />
+                            </PaginationItem>
+
+                            {Array.from({ length: numPages }, (_, i) => i + 1)
+                                .filter(p => p === 1 || p === numPages || Math.abs(p - page) <= 1)
+                                .reduce<(number | 'ellipsis')[]>((acc, p, idx, arr) => {
+                                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('ellipsis')
+                                    acc.push(p)
+                                    return acc
+                                }, [])
+                                .map((p, idx) =>
+                                    p === 'ellipsis' ? (
+                                        <PaginationItem key={`ellipsis-${idx}`}>
+                                            <PaginationEllipsis />
+                                        </PaginationItem>
+                                    ) : (
+                                        <PaginationItem key={p}>
+                                            <PaginationLink
+                                                isActive={page === p}
+                                                onClick={() => goTo(p)}
+                                                className="cursor-pointer"
+                                            >
+                                                {p}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    )
+                                )}
+
+                            <PaginationItem>
+                                <PaginationNext
+                                    onClick={() => goTo(page + 1)}
+                                    className={page >= numPages ? 'pointer-events-none opacity-30' : 'cursor-pointer'}
+                                />
+                            </PaginationItem>
+                        </PaginationContent>
+                    </Pagination>
+                </div>
             </div>
-
-            <div className="flex items-center justify-center gap-4 py-3 border-t bg-white text-sm">
-                <button
-                    onClick={() => goTo(page - 1)}
-                    disabled={page <= 1}
-                    className="p-1 rounded hover:bg-gray-100 disabled:opacity-30"
-                >
-                    <ChevronLeft className="h-4 w-4" />
-                </button>
-
-                <span className="text-gray-600">
-                    Page{' '}
-                    <input
-                        type="number"
-                        value={page}
-                        onChange={(e) => goTo(Number(e.target.value))}
-                        className="w-12 text-center border rounded px-1 py-0.5 text-sm"
-                    />
-                    {' '}of {numPages}
-                </span>
-
-                <button
-                    onClick={() => goTo(page + 1)}
-                    disabled={page >= numPages}
-                    className="p-1 rounded hover:bg-gray-100 disabled:opacity-30"
-                >
-                    <ChevronRight className="h-4 w-4" />
-                </button>
-            </div>
-        </div>
+        </>
     )
 }
