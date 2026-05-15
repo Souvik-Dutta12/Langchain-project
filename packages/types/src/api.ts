@@ -1,5 +1,5 @@
 export interface Book {
-    id: string
+    _id: string
     title: string
     author: string
     r2Url: string
@@ -14,9 +14,17 @@ export interface ChatMessage {
     id: string
     role: 'user' | 'assistant'
     content: string
-    sources: Source[]
+    sources?: Source[]
+    contextBookIds?: string[]
     createdAt: string
 }
+
+export interface Conversation {
+    id: string                  // matches DB conversationId
+    bookIds: string[]
+    messages: ChatMessage[]
+    createdAt: string
+ }
   
 export interface Source {
     page: number

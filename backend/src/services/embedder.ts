@@ -5,6 +5,7 @@ import { env } from '../config/env.js'
 import { Document } from '@langchain/core/documents'
 import { pinecone } from '../config/pinecone.js'
 import { HfInference } from '@huggingface/inference'
+import { Embeddings, type EmbeddingsParams } from '@langchain/core/embeddings'
 
 const hf = new HfInference(env.HUGGINGFACE_API_KEY)
 const EMBED_MODEL = 'BAAI/bge-small-en-v1.5'
@@ -77,26 +78,26 @@ export async function embedAndUpsert(
     }
 }
 
-export async function similaritySearch(
-    query: string,
-    namespace: string,
-    topK = 6
-) {
+class HuggingFaceEmbeddings extends Embeddings {
+    constructor(params?: EmbeddingsParams) {
+      super(params ?? {})
+    }
+  
+    async embedDocuments(texts: string[]): Promise<number[][]> {
+      return Promise.all(texts.map((t) => getEmbedding(t)))
+    }
+  
+    async embedQuery(text: string): Promise<number[]> {
+      return getEmbedding(text)
+    }
+  }
+  
+export const hfEmbeddings = new HuggingFaceEmbeddings()
 
-    const queryVector = await getEmbedding(query)
-
+export async function getVectorStore(namespace: string): Promise<PineconeStore> {
     const index = pinecone.index(env.PINECONE_INDEX_NAME)
-    const results = await index.namespace(namespace).query({
-        vector: queryVector,
-        topK,
-        includeMetadata: true,
+    return PineconeStore.fromExistingIndex(hfEmbeddings, {
+      pineconeIndex: index,
+      namespace,
     })
-
-    return results.matches.map((m) => ({
-        pageContent: m.metadata?.text as string ?? '',
-        metadata: {
-            page: m.metadata?.page,
-            bookId: m.metadata?.bookId,
-        },
-    }))
-}
+  }

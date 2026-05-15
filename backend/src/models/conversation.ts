@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose'
 
 export interface IConversation extends Document {
   ownerClerkId: string
-  bookId: string
+  bookIds: string[]
   title: string
   createdAt: Date
 }
@@ -13,9 +13,10 @@ const ConversationSchema = new Schema<IConversation>({
     required: true, 
     index: true
   },
-  bookId:{ 
-    type: String, 
-    required: true 
+  bookIds:{ 
+    type: [String], 
+    required: true,
+    default: []
   },
   title:{ 
     type: String, 

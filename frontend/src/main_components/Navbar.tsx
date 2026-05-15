@@ -7,33 +7,6 @@ import Logo from './Logo';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
-  const { isSignedIn, sessionId, getToken, isLoaded } = useAuth();
-  const { scrollY } = useScroll();
-
-
-
-  const testBackend = async () => {
-    if (!isSignedIn) return;
-    const token = await getToken();
-    try {
-      const res = await fetch("/api/debug-auth", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      console.log(data)
-    } catch (err) {
-      console.error('Test backend error:', err);
-    }
-  };
-
-  useEffect(() => {
-    if (isSignedIn) {
-      testBackend();
-    }
-  }, [isSignedIn]);
 
   return (
     <motion.nav

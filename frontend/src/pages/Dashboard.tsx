@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { PDFViewer } from '@/main_components/PDFViewer'
 import { useAuth } from "@clerk/clerk-react";
+import BookChat from './books/BookChat'
 
 function BookCard({ book,onPreview }: { 
     book: Book;
@@ -71,7 +72,6 @@ export default function Dashboard() {
         }
     }, [isLoaded, isSignedIn]);
 
-    console.log(selectedBook)
     return (
         <div className="h-screen  bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50 selection:bg-indigo-500/30">
             <div className='h-[13%] '>
@@ -128,9 +128,13 @@ export default function Dashboard() {
                     )}>
 
                         <div className="left h-full w-1/4 rounded-l-md border-r "></div>
-                        <div className="right h-full w-3/4 rounded-r-md"></div>
+                        <div className="right h-full w-3/4 rounded-r-md">
+                            <BookChat />
+                        </div>
                     </div>
 
+
+                    
              
                     }
 

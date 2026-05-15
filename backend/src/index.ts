@@ -8,6 +8,8 @@ import { connectToDatabase } from './config/db.js';
 import { syncUserMiddleware } from './middleware/syncUser.js';
 import { ensurePineconeIndex } from './config/pinecone.js';
 import booksRouter from './routers/books.js'
+import chatRouter from './routers/chat.js'
+import { rateLimiter } from 'hono-rate-limiter'
 
 const app = new Hono<{ Variables: AppVariables }>();
 app.use('*', cors({
@@ -24,8 +26,17 @@ app.use('/api/v1/*', clerkAuthMiddleware)
 app.use('/api/v1/*', syncUserMiddleware)
 
 
+// Rate limiting 
+// Chat: 20 requests/minute per user
+app.use('/api/v1/chat/*', rateLimiter<{ Variables: AppVariables }>({
+  windowMs: 60 * 1000,
+  limit: 20,
+  keyGenerator: (c) => c.get('userId'),
+}))
+
 // protected routes
 app.route('/api/v1/books', booksRouter)
+app.route('/api/v1/chat', chatRouter)
 
 
 
