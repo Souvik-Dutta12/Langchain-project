@@ -22,8 +22,13 @@ import {
   InputGroupInput,
   InputGroupTextarea,
 } from "@/components/ui/input-group"
-
-
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import ReactMarkdown from "react-markdown";
 interface SelectedBook {
   id: string
   title: string
@@ -40,7 +45,7 @@ export default function BookChat() {
   const { streamingAnswer, sources, isStreaming, sendMessage } = useChat(bookIds)
 
   // ── Persist messages in store instead of local state ─────────────────
-  const { activeConversationId, startConversation, addMessage, conversations } = useChatStore()
+  const { activeConversationId,setActiveConversation, startConversation, addMessage, conversations } = useChatStore()
   const activeMessages = activeConversationId
     ? (conversations[activeConversationId]?.messages ?? [])
     : []
@@ -148,7 +153,7 @@ export default function BookChat() {
         const book = filteredBooks[mentionMenuIndex]
         if (book)
           addBook({
-            id: book._id,
+            _id: book._id,
             title: book.title
           })
         return
@@ -170,50 +175,52 @@ export default function BookChat() {
 
     if (!q || isStreaming) return
 
-    // Extract inline mentions
     const matches = q.match(/@\S+/g) || []
 
-    // Convert mentions -> bookIds
-    const bookIds = matches
+    const selectedBookIds = matches
       .map((m) => mentionedBooks[m])
       .filter(Boolean)
 
-    // Remove mentions from final query
     const cleanedQuery = q.replace(/@\S+/g, '').trim()
 
-    // Prevent sending empty query
     if (!cleanedQuery) return
 
     setInput('')
     setShowMentionMenu(false)
 
+    // temporary conversation id
+    const tempConversationId =
+      activeConversationId || nanoid()
 
-    // Ensure conversation exists
-    let convId = activeConversationId
-
-    if (!convId) {
-      convId = nanoid()
-      startConversation(convId, bookIds)
+    // create local conversation immediately
+    if (!conversations[tempConversationId]) {
+      startConversation(tempConversationId, selectedBookIds)
     }
 
-    // Save user message immediately
-    addMessage(convId, {
+    setActiveConversation(tempConversationId)
+
+    // ADD USER MESSAGE IMMEDIATELY
+    addMessage(tempConversationId, {
       id: nanoid(),
       role: 'user',
       content: q,
-      contextBookIds: bookIds,
+      contextBookIds: selectedBookIds,
       createdAt: new Date().toISOString(),
     })
 
     try {
-      // IMPORTANT:
-      // send cleaned query, not raw query
       const {
         answer,
-        sources: resolvedSources
+        sources: resolvedSources,
+        conversationId,
       } = await sendMessage(cleanedQuery)
 
-      addMessage(convId, {
+      // backend returned real conversation id
+      const finalConversationId =
+        conversationId || tempConversationId
+
+      // assistant message
+      addMessage(finalConversationId, {
         id: nanoid(),
         role: 'assistant',
         content: answer,
@@ -222,13 +229,12 @@ export default function BookChat() {
       })
 
     } catch (error) {
+      console.error(error)
 
-      console.error("SEND ERROR:", error)
-
-      addMessage(convId, {
+      addMessage(tempConversationId, {
         id: nanoid(),
         role: 'assistant',
-        content: 'Something went wrong. Please try again.',
+        content: 'Something went wrong.',
         createdAt: new Date().toISOString(),
       })
     }
@@ -239,7 +245,7 @@ export default function BookChat() {
     <div className="flex flex-col relative h-full overflow-y-auto mx-auto">
 
       {/* Header */}
-      <div className=' h-11 bg-transparent'>
+      <div className=' h-11 bg-transparent ' >
         <NavigationMenu className={cn(
           "fixed mt-2 ml-2"
         )}>
@@ -257,9 +263,9 @@ export default function BookChat() {
       </div>
 
       {/* Messages */}
-      <div className="flex flex-col max-w-3xl px-8 w-full mx-auto space-y-5">
+      <div className="flex flex-col  max-w-3xl px-8 w-full pt-3 pb-[80px] mx-auto space-y-5">
         {messages.length === 0 && (
-          <div className="flex flex-col  min-h-[60vh] items-center justify-center h-full text-center space-y-3 mt-8">
+          <div className="flex flex-col  min-h-[50vh]  items-center justify-center h-full text-center space-y-3 mt-8">
 
             <p className="text-2xl text-neutral-600 dark:text-neutral-400">Hey <span className=" p-1 rounded-lg border-dashed shadow-md text-3xl text-neutral-950 dark:text-white font-bold text-shadow-md ">{user?.username || user?.firstName || "User"}</span>, Whats on your mind today ?</p>
           </div>
@@ -280,15 +286,18 @@ export default function BookChat() {
                 </div>
               </div>
             )}
-
+          
             <div className={`flex  ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={` rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap
                 ${msg.role === 'user'
                   ? 'bg-indigo-500 text-white rounded-br-sm shadow-sm border'
                   : ''
                 }`}
-              >
+                
+                >
+                <ReactMarkdown>
                 {msg.content}
+                </ReactMarkdown>
               </div>
             </div>
 
@@ -296,14 +305,28 @@ export default function BookChat() {
             {msg.sources && msg.sources.length > 0 && (
               <div className="ml-1 space-y-1">
                 {msg.sources.map((s: Source, si: number) => (
-                  <button
-                    key={si}
-                    className="flex items-center gap-1.5 text-xs text-blue-500 hover:text-blue-700 hover:underline"
+                  <Accordion
+                  typeof='single'
+                  key={si}
+                  className="rounded-xl shadow-sm border-b p-3 text-xs space-y-1 bg-neutral-50 dark:bg-neutral-900"
                   >
-                    <FileText className="h-3 w-3" />
-                    Page {s.page}: {s.chunk.slice(0, 60)}…
-                  </button>
+                    <AccordionItem>
+                      <div className="font-medium">
+                        Page {s.page}
+                      </div>
+
+                      <AccordionTrigger className="text-neutral-500">
+                        {s?.reason}
+                      </AccordionTrigger>
+
+                      <AccordionContent className="line-clamp-2 italic">
+                        "{s?.snippet}"
+                      </AccordionContent>
+                    </AccordionItem>
+                    
+                </Accordion>
                 ))}
+                
               </div>
             )}
           </div>
@@ -387,6 +410,7 @@ export default function BookChat() {
           </div>
         </div>
       </div>
+      
     </div>
   )
 }

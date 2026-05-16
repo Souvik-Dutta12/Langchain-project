@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { PDFViewer } from '@/main_components/PDFViewer'
 import { useAuth } from "@clerk/clerk-react";
 import BookChat from './books/BookChat'
+import HistorySidebar from '@/main_components/HistorySidebar'
 
 function BookCard({ book,onPreview }: { 
     book: Book;
@@ -127,7 +128,9 @@ export default function Dashboard() {
                         "shadow-[0px_0px_1px_3px_rgba(255,255,255,1)_inset] dark:shadow-[0px_0px_1px_3px_rgba(0,0,0,1)_inset]"
                     )}>
 
-                        <div className="left h-full w-1/4 rounded-l-md border-r "></div>
+                        <div className="left h-full w-1/4 rounded-l-md border-r ">
+                            <HistorySidebar />
+                        </div>
                         <div className="right h-full w-3/4 rounded-r-md">
                             <BookChat />
                         </div>

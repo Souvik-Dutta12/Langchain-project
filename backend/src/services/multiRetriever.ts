@@ -38,11 +38,68 @@ export class MultiNamespaceRetriever extends BaseRetriever {
       // silently skip failed namespaces (bad bookId etc.)
     }
 
+    console.log(
+      merged.map(([d, s]) => ({
+        score: s,
+        preview: d.pageContent.slice(0, 60),
+      }))
+    )
+
     // Sort descending by cosine similarity score
     merged.sort((a, b) => b[1] - a[1])
 
     // Return top (k * namespaces) but cap at a sensible limit
-    const cap = Math.min(merged.length, this.k * this.namespaces.length)
-    return merged.slice(0, cap).map(([doc]) => doc)
+    const uniqueDocs = new Map()
+
+    for (const [doc, score] of merged) {
+      const key = doc.pageContent.slice(0, 120)
+
+      if (!uniqueDocs.has(key)) {
+        uniqueDocs.set(key, {
+          doc,
+          score,
+        })
+      }
+    }
+
+    // Better reranking
+    const reranked = [...uniqueDocs.values()]
+      .sort((a, b) => {
+        const pageA = a.doc.metadata.page || 999
+        const pageB = b.doc.metadata.page || 999
+      
+        // slight boost to earlier pages
+        return pageA - pageB
+      })
+      .slice(0, 10)
+
+    const cleanedDocs = reranked
+      .map((r) => r.doc)
+      .filter((doc) => {
+        const text = doc.pageContent.trim()
+
+        // Remove tiny chunks
+        if (text.length < 150) return false
+
+        // Remove references/bibliography
+        const lower = text.toLowerCase()
+
+        if (
+          lower.includes('references') ||
+          lower.includes('international journal') ||
+          lower.includes('doi') ||
+          lower.includes('et al') ||
+          lower.includes('conference') ||
+          lower.includes('ieee') ||
+          lower.includes('[1]') ||
+          lower.includes('[2]')
+        ) {
+          return false
+        }
+
+        return true
+      })
+
+    return cleanedDocs
   }
 }

@@ -1,11 +1,10 @@
-// backend/qaService.ts
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts'
 import { HumanMessage, AIMessage, BaseMessage } from '@langchain/core/messages'
 import { StringOutputParser } from '@langchain/core/output_parsers'
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables'
+import { Document } from '@langchain/core/documents'
 import { env } from '../config/env.js'
-import { MultiNamespaceRetriever } from './multiRetriever.js'
 
 const llm = new ChatGoogleGenerativeAI({
   model: 'gemini-2.5-flash',
@@ -14,75 +13,114 @@ const llm = new ChatGoogleGenerativeAI({
   streaming: true,
 })
 
-// ── Prompt ────────────────────────────────────────────────────────────────────
 const RAG_PROMPT = ChatPromptTemplate.fromMessages([
   [
     'system',
-    `You are an intelligent assistant that answers questions strictly from the
-provided PDF content. Always cite page numbers like [Page 34] or [Pages 12, 45].
-If the answer is not in the context say exactly:
-"This information is not available in the provided documents."
+    `
+You are an advanced AI document assistant.
 
-Context from the document(s):
-{context}`,
+Your responsibilities:
+
+- Understand document context deeply
+- Answer naturally like ChatGPT
+- Do NOT copy raw chunks
+- Summarize intelligently
+- Adapt answer style to user intent
+- Use paragraphs or bullet points depending on the query
+- Keep answers conversational and human-friendly
+
+RULES:
+
+1. Prefer document knowledge first
+2. If documents partially contain the answer:
+   - combine document knowledge with general knowledge
+3. If answer does not exist in documents:
+   - clearly say so
+   - answer using your general knowledge
+4. Never hallucinate document facts
+5. Keep answers concise unless user asks for detail
+6. Avoid raw citation spam
+7. Keep responses natural and conversational.
+8. Avoid sounding like a research paper summary.
+9. Explain concepts simply unless user asks technically.
+10. If the user asks:
+- abstract
+→ generate a concise academic abstract style response
+
+- "explain"
+→ give explanation
+
+- "short answer"
+→ concise response
+
+- "pointwise"
+→ bullets
+
+- "paragraph"
+→ paragraph format
+
+Retrieved document context:
+
+{context}
+`
   ],
-  // Injects full conversation history so the model understands follow-ups
   new MessagesPlaceholder('history'),
   ['human', '{input}'],
 ])
 
-// ── History helpers ───────────────────────────────────────────────────────────
 export interface HistoryMessage {
   role: 'user' | 'assistant'
   content: string
 }
 
+export async function optimizeQuery(query: string) {
+  const result = await llm.invoke(`
+    Rewrite the following user query into a detailed semantic search query
+    optimized for retrieving relevant document chunks from PDFs.
+      
+    User Query:
+    "${query}"
+      
+    Only return the rewritten retrieval query.
+  `)
+
+  return result.content.toString()
+}
+
 function toBaseMessages(history: HistoryMessage[]): BaseMessage[] {
   return history.map((m) =>
-    m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content)
+    m.role === 'user'
+      ? new HumanMessage(m.content)
+      : new AIMessage(m.content)
   )
 }
 
-// ── Chain factory ─────────────────────────────────────────────────────────────
-/**
- * @param namespaces  One namespace per selected book (bookId = namespace key)
- * @param history     Full conversation so far (for follow-up awareness)
- */
 export async function buildQAChain(
-  namespaces: string[],
+  docs: Document[],
   history: HistoryMessage[] = []
 ) {
-  if (namespaces.length === 0) throw new Error('At least one namespace required')
-
-  const retriever = new MultiNamespaceRetriever(namespaces, 5)
-
   const chain = RunnableSequence.from([
     RunnablePassthrough.assign({
-      // Retrieve docs and format them; also pass history as BaseMessage[]
-      context: async (input: { input: string }) => {
-        const docs = await retriever._getRelevantDocuments(input.input)
-        return docs.map((d) => d.pageContent).join('\n\n') 
+      context: async () => {
+        return docs
+          .map((d, index) => {
+            return `
+                  SOURCE ${index + 1}
+                  Page: ${d.metadata.page}
+
+                  ${d.pageContent}
+                  `
+          })
+          .join('\n\n-------------\n\n')
       },
+
       history: () => toBaseMessages(history),
-      // Expose raw docs for source extraction after streaming
-      _docs: async (input: { input: string }) =>
-        retriever._getRelevantDocuments(input.input),
     }),
+
     RAG_PROMPT,
     llm,
     new StringOutputParser(),
   ])
 
-  return { chain, retriever }
-}
-
-// ── Source extraction (call after chain.stream finishes) ──────────────────────
-export async function extractSources(namespaces: string[], query: string) {
-  const retriever = new MultiNamespaceRetriever(namespaces, 5)
-  const docs = await retriever._getRelevantDocuments(query)
-  return docs.map((d) => ({
-    page: d.metadata.page as number,
-    chunk: (d.pageContent ?? '').slice(0, 120),
-    bookId: d.metadata.bookId as string,
-  }))
+  return { chain }
 }

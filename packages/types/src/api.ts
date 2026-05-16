@@ -28,8 +28,9 @@ export interface Conversation {
   
 export interface Source {
     page: number
-    chunk: string
     bookId: string
+    reason?: string
+    snippet?: string
   }
   
 export interface QuizQuestion {

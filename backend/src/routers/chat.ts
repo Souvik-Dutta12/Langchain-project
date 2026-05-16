@@ -2,9 +2,10 @@ import { Hono } from "hono";
 import type { AppVariables } from "../types/hono.js";
 import { BookModel } from "../models/book.js";
 import { streamSSE } from "hono/streaming";
-import { buildQAChain, extractSources, type HistoryMessage } from "../services/qaService.js";
+import { buildQAChain, optimizeQuery, type HistoryMessage } from "../services/qaService.js";
 import { MessageModel } from "../models/message.js";
 import { ConversationModel } from "../models/conversation.js";
+import { MultiNamespaceRetriever } from "../services/multiRetriever.js";
 
 const router = new Hono<{ Variables: AppVariables }>()
 
@@ -31,7 +32,7 @@ router.get('/stream', async (c) => {
 
     const books = await BookModel.find({
         _id: { $in: realBookIds },
-        ownerClerkId: userId, 
+        ownerClerkId: userId,
         status: 'ready',
     }).lean()
 
@@ -78,12 +79,31 @@ router.get('/stream', async (c) => {
 
             const namespaces = books.map((book) => book.pineconeNamespace);
 
-            const { chain } = await buildQAChain(namespaces, history);
+            const optimizedQuery = await optimizeQuery(query)
+            console.log('Optimized Query:', optimizedQuery)
 
+            const retriever = new MultiNamespaceRetriever(namespaces, 12);
+
+            const retrievedDocs =
+                await retriever._getRelevantDocuments(optimizedQuery);
+
+            console.log(
+                'Retrieved docs:',
+                retrievedDocs.map((d) => ({
+                    page: d.metadata.page,
+                    preview: d.pageContent.slice(0, 1500),
+                }))
+            )
+
+            const { chain } = await buildQAChain(
+                retrievedDocs,
+                history
+            );
+            console.log('Streaming started...')
             const result = await chain.stream({
                 input: query,
             });
-
+            
             for await (const chunk of result) {
                 if (typeof chunk === "string" && chunk) {
                     fullAnswer += chunk;
@@ -94,8 +114,21 @@ router.get('/stream', async (c) => {
                     });
                 }
             }
+            console.log('Final answer:', fullAnswer)
+            const sources = retrievedDocs
+                .slice(0, 3)
+                .map((d) => ({
+                    page: d.metadata.page,
+                    bookId: d.metadata.bookId,
 
-            const sources = await extractSources(namespaces, query);
+                    reason:
+                        d.pageContent.slice(0, 100),
+
+                    snippet:
+                        d.pageContent.slice(0, 180),
+                }))
+
+            console.log(sources)
 
             await stream.writeSSE({
                 event: "sources",
@@ -127,9 +160,9 @@ router.get('/stream', async (c) => {
             await stream.writeSSE({
                 event: "error",
                 data:
-                  error instanceof Error
-                    ? error.message
-                    : "Internal server error",
+                    error instanceof Error
+                        ? error.message
+                        : "Internal server error",
             })
         }
     })
@@ -138,46 +171,46 @@ router.get('/stream', async (c) => {
 
 router.get("/conversations", async (c) => {
     const userId = c.get("userId");
-  
+
     const conversations = await ConversationModel.find({
-      ownerClerkId: userId,
+        ownerClerkId: userId,
     })
-      .sort({ createdAt: -1 })
-      .lean();
-  
+        .sort({ createdAt: -1 })
+        .lean();
+
     return c.json(conversations);
-  });
-  
-  // ── GET /chat/conversations/:id/messages ──────────────────────────────────
-  router.get("/conversations/:id/messages", async (c) => {
+});
+
+// ── GET /chat/conversations/:id/messages ──────────────────────────────────
+router.get("/conversations/:id/messages", async (c) => {
     const userId = c.get("userId");
     const { id } = c.req.param();
-  
+
     // ── Verify ownership ────────────────────────────────────────────────────
     const conversation = await ConversationModel.findOne({
-      _id: id,
-      ownerClerkId: userId,
+        _id: id,
+        ownerClerkId: userId,
     });
-  
+
     if (!conversation) {
-      return c.json(
-        {
-          error: "Conversation not found",
-        },
-        404
-      );
+        return c.json(
+            {
+                error: "Conversation not found",
+            },
+            404
+        );
     }
-  
+
     const messages = await MessageModel.find({
-      conversationId: id,
+        conversationId: id,
     })
-      .sort({ createdAt: 1 })
-      .lean();
-  
+        .sort({ createdAt: 1 })
+        .lean();
+
     return c.json({
-      conversationId: id,
-      messages,
+        conversationId: id,
+        messages,
     });
-  });
-  
-  export default router;
+});
+
+export default router;

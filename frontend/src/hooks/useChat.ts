@@ -11,7 +11,11 @@ export function useChat(bookIds: string[]) {
   const sendMessage = useCallback(
     async (
       query: string
-    ): Promise<{ answer: string; sources: Source[] }> => {
+    ): Promise<{ 
+      answer: string; 
+      sources: Source[];
+      conversationId: string | null
+    }> => {
       
       if (bookIds.length === 0) throw new Error('Select at least one book first')
       
@@ -50,6 +54,8 @@ export function useChat(bookIds: string[]) {
         })
 
         es.addEventListener('token', (e) => {
+          console.log('TOKEN:', e.data)
+        
           const chunk = e.data.replace(/\\n/g, '\n')
           fullAnswer += chunk
           setStreamingAnswer((prev) => prev + chunk)
@@ -62,11 +68,16 @@ export function useChat(bookIds: string[]) {
         })
 
         es.addEventListener('done', () => {
+          console.log('DONE EVENT')
+          console.log('FINAL ANSWER:', fullAnswer)
+        
           es.close()
           setIsStreaming(false)
-          resolve({ 
-            answer: fullAnswer, 
-            sources: resolvedSources 
+        
+          resolve({
+            answer: fullAnswer,
+            sources: resolvedSources,
+            conversationId: conversationIdRef.current
           })
         })
 
@@ -78,11 +89,7 @@ export function useChat(bookIds: string[]) {
           reject(new Error(errMsg))
         })
 
-        es.onerror = () => {
-          es.close()
-          setIsStreaming(false)
-          reject(new Error('Connection error'))
-        }
+        
       })
     },
     [bookIds]
